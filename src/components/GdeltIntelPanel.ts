@@ -9,6 +9,8 @@ import {
   type IntelTopic,
   type TopicIntelligence,
 } from '@/services/gdelt-intel';
+import { getLanguage, onLanguageChange } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class GdeltIntelPanel extends Panel {
   private activeTopic: IntelTopic = INTEL_TOPICS[0]!;
@@ -32,6 +34,11 @@ export class GdeltIntelPanel extends Panel {
     });
     this.createTabs();
     this.loadActiveTopic();
+
+    onLanguageChange(() => {
+      const cached = this.topicData.get(this.activeTopic.id);
+      if (cached) this.renderArticles(cached.articles);
+    });
   }
 
   private createTabs(): void {
@@ -91,6 +98,17 @@ export class GdeltIntelPanel extends Panel {
 
     const html = articles.map(article => this.renderArticle(article)).join('');
     this.content.innerHTML = `<div class="gdelt-intel-articles">${html}</div>`;
+
+    // Translate article titles if Japanese
+    if (getLanguage() === 'ja') {
+      const titles = articles.map(a => a.title);
+      translateTexts(titles).then(translated => {
+        const titleEls = this.content.querySelectorAll<HTMLElement>('.article-title');
+        titleEls.forEach((el, i) => {
+          if (translated[i]) el.textContent = translated[i]!;
+        });
+      });
+    }
   }
 
   private renderArticle(article: GdeltArticle): string {

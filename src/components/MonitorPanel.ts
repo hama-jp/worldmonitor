@@ -3,6 +3,8 @@ import type { Monitor, NewsItem } from '@/types';
 import { MONITOR_COLORS } from '@/config';
 import { generateId, formatTime } from '@/utils';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class MonitorPanel extends Panel {
   private monitors: Monitor[] = [];
@@ -139,10 +141,10 @@ export class MonitorPanel extends Panel {
       ? `Showing 10 of ${unique.length} matches`
       : `${unique.length} match${unique.length === 1 ? '' : 'es'}`;
 
+    const displayed = unique.slice(0, 10);
     results.innerHTML = `
       <div style="color: var(--text-dim); font-size: 10px; margin: 12px 0 8px;">${countText}</div>
-      ${unique
-        .slice(0, 10)
+      ${displayed
         .map(
           (item) => `
         <div class="item" style="border-left: 2px solid ${escapeHtml(item.monitorColor || '')}; padding-left: 8px; margin-left: -8px;">
@@ -153,6 +155,17 @@ export class MonitorPanel extends Panel {
       `
         )
         .join('')}`;
+
+    // Translate monitor match titles if Japanese
+    if (getLanguage() === 'ja') {
+      const titles = displayed.map(i => i.title);
+      translateTexts(titles).then(translated => {
+        const titleEls = results.querySelectorAll<HTMLElement>('.item-title');
+        titleEls.forEach((el, i) => {
+          if (translated[i]) el.textContent = translated[i]!;
+        });
+      });
+    }
   }
 
   public onChanged(callback: (monitors: Monitor[]) => void): void {

@@ -2,6 +2,8 @@ import { getRecentSignals, type CorrelationSignal } from '@/services/correlation
 import { getRecentAlerts, type UnifiedAlert } from '@/services/cross-module-integration';
 import { getSignalContext } from '@/utils/analysis-constants';
 import { escapeHtml } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 const LOW_COUNT_THRESHOLD = 3;
 const MAX_VISIBLE_FINDINGS = 10;
@@ -269,6 +271,26 @@ export class IntelligenceFindingsBadge {
         ${moreCount > 0 ? `<div class="findings-more">+${moreCount} more findings</div>` : ''}
       </div>
     `;
+
+    // Translate finding titles and descriptions if Japanese
+    if (getLanguage() === 'ja') {
+      const visible = this.findings.slice(0, MAX_VISIBLE_FINDINGS);
+      const texts = visible.flatMap(f => [f.title, f.description]);
+      translateTexts(texts).then(translated => {
+        const items = this.dropdown.querySelectorAll('.finding-item');
+        items.forEach((item, i) => {
+          const titleEl = item.querySelector<HTMLElement>('.finding-type');
+          const descEl = item.querySelector<HTMLElement>('.finding-description');
+          if (titleEl && translated[i * 2]) {
+            const icon = this.getTypeIcon(visible[i]!.type);
+            titleEl.innerHTML = `${icon} ${escapeHtml(translated[i * 2]!)}`;
+          }
+          if (descEl && translated[i * 2 + 1]) {
+            descEl.textContent = translated[i * 2 + 1]!;
+          }
+        });
+      });
+    }
   }
 
   private getInsight(finding: UnifiedFinding): string {
@@ -399,6 +421,25 @@ export class IntelligenceFindingsBadge {
     });
 
     document.body.appendChild(overlay);
+
+    // Translate modal findings if Japanese
+    if (getLanguage() === 'ja') {
+      const texts = this.findings.flatMap(f => [f.title, f.description]);
+      translateTexts(texts).then(translated => {
+        const items = overlay.querySelectorAll('.findings-modal-item');
+        items.forEach((item, i) => {
+          const titleEl = item.querySelector<HTMLElement>('.findings-modal-item-type');
+          const descEl = item.querySelector<HTMLElement>('.findings-modal-item-desc');
+          if (titleEl && translated[i * 2]) {
+            const icon = this.getTypeIcon(this.findings[i]!.type);
+            titleEl.innerHTML = `${icon} ${escapeHtml(translated[i * 2]!)}`;
+          }
+          if (descEl && translated[i * 2 + 1]) {
+            descEl.textContent = translated[i * 2 + 1]!;
+          }
+        });
+      });
+    }
   }
 
   public destroy(): void {

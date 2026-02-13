@@ -1,6 +1,8 @@
 import { Panel } from './Panel';
 import type { PredictionMarket } from '@/types';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class PredictionPanel extends Panel {
   constructor() {
@@ -60,5 +62,16 @@ export class PredictionPanel extends Panel {
       .join('');
 
     this.setContent(html);
+
+    // Translate prediction questions if Japanese
+    if (getLanguage() === 'ja') {
+      const titles = data.map(p => p.title);
+      translateTexts(titles).then(translated => {
+        const questionEls = this.content.querySelectorAll<HTMLElement>('.prediction-question');
+        questionEls.forEach((el, i) => {
+          if (translated[i]) el.textContent = translated[i]!;
+        });
+      });
+    }
   }
 }
