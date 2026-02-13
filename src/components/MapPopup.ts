@@ -9,6 +9,8 @@ import { isMobileDevice } from '@/utils';
 import { fetchHotspotContext, formatArticleDate, extractDomain, type GdeltArticle } from '@/services/gdelt-intel';
 import { getNaturalEventIcon } from '@/services/eonet';
 import { getHotspotEscalation, getEscalationChange24h } from '@/services/hotspot-escalation';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'nuclear' | 'economic' | 'irradiator' | 'pipeline' | 'cable' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'spaceport' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity';
 
@@ -141,10 +143,57 @@ export class MapPopup {
     // Close button handler
     this.popup.querySelector('.popup-close')?.addEventListener('click', () => this.hide());
 
+    // Translate popup content if Japanese
+    this.translatePopup();
+
     // Click outside to close
     setTimeout(() => {
       document.addEventListener('click', this.handleOutsideClick);
     }, 100);
+  }
+
+  private translatePopup(): void {
+    if (getLanguage() !== 'ja' || !this.popup) return;
+
+    const titleEls = this.popup.querySelectorAll<HTMLElement>('.popup-title, .popup-subtitle, .popup-headline');
+    const descEls = this.popup.querySelectorAll<HTMLElement>('.popup-description, .why-matters-text, .history-value, .indicator-tag');
+    const newsEls = this.popup.querySelectorAll<HTMLElement>('.news-title, .article-title');
+    const tagEls = this.popup.querySelectorAll<HTMLElement>('.popup-tag');
+    const statValueEls = this.popup.querySelectorAll<HTMLElement>('.stat-value');
+    const clusterItemEls = this.popup.querySelectorAll<HTMLElement>('.cluster-item');
+
+    // Collect all translatable texts
+    const allEls: HTMLElement[] = [];
+    const allTexts: string[] = [];
+
+    const collectTexts = (els: NodeListOf<HTMLElement>) => {
+      els.forEach(el => {
+        const text = el.textContent?.trim() || '';
+        // Skip numeric values, coordinates, dates, short codes
+        if (!text || /^[\d.,°%+\-/\s:$€£¥]+$/.test(text) || /^\d+[hms]\s*ago$/.test(text) || text.length < 3) return;
+        // Skip if it's mostly numbers with units (e.g., "FL350", "150 kts")
+        if (/^[A-Z]{0,3}\d+/.test(text) && text.length < 10) return;
+        allEls.push(el);
+        allTexts.push(text);
+      });
+    };
+
+    collectTexts(titleEls);
+    collectTexts(descEls);
+    collectTexts(newsEls);
+    collectTexts(tagEls);
+    collectTexts(statValueEls);
+    collectTexts(clusterItemEls);
+
+    if (allTexts.length > 0) {
+      translateTexts(allTexts).then(translated => {
+        allEls.forEach((el, i) => {
+          if (translated[i] && translated[i] !== allTexts[i]) {
+            el.textContent = translated[i]!;
+          }
+        });
+      });
+    }
   }
 
   private handleOutsideClick = (e: MouseEvent) => {
@@ -498,6 +547,17 @@ export class MapPopup {
           ${articles.slice(0, 5).map(article => this.renderGdeltArticle(article)).join('')}
         </div>
       `;
+
+      // Translate article titles if Japanese
+      if (getLanguage() === 'ja') {
+        const titleEls = container.querySelectorAll<HTMLElement>('.article-title');
+        const texts = Array.from(titleEls).map(el => el.textContent || '');
+        if (texts.length > 0) {
+          translateTexts(texts).then(translated => {
+            titleEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+          });
+        }
+      }
     } catch (error) {
       if (container.isConnected) {
         container.innerHTML = `
