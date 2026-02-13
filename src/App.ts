@@ -76,6 +76,8 @@ import {
 } from '@/components';
 import type { SearchResult } from '@/components/SearchModal';
 import { collectStoryData } from '@/services/story-data';
+import { getLanguage, setLanguage, onLanguageChange } from '@/services/language';
+import { clearTranslationCache } from '@/services/translation';
 import { openStoryModal } from '@/components/StoryModal';
 import { INTEL_HOTSPOTS, CONFLICT_ZONES, MILITARY_BASES, UNDERSEA_CABLES, NUCLEAR_FACILITIES } from '@/config/geo';
 import { PIPELINES } from '@/config/pipelines';
@@ -1134,6 +1136,10 @@ export class App {
           </div>
         </div>
         <div class="header-right">
+          <div class="lang-toggle" id="langToggle">
+            <button class="lang-option active" data-lang="en">EN</button>
+            <button class="lang-option" data-lang="ja">JA</button>
+          </div>
           <button class="search-btn" id="searchBtn"><kbd>⌘K</kbd> Search</button>
           <button class="copy-link-btn" id="copyLinkBtn">Copy Link</button>
           <span class="time-display" id="timeDisplay">--:--:-- UTC</span>
@@ -1775,6 +1781,9 @@ export class App {
       this.searchModal?.open();
     });
 
+    // Language toggle
+    this.setupLanguageToggle();
+
     // Copy link button
     document.getElementById('copyLinkBtn')?.addEventListener('click', async () => {
       const shareUrl = this.getShareUrl();
@@ -2095,6 +2104,52 @@ export class App {
     if (counterEl) {
       counterEl.textContent = `${enabledCount}/${allSources.length} enabled`;
     }
+  }
+
+  private setupLanguageToggle(): void {
+    const toggle = document.getElementById('langToggle');
+    if (!toggle) return;
+
+    // Set initial state from stored preference
+    const currentLang = getLanguage();
+    toggle.querySelectorAll<HTMLButtonElement>('.lang-option').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
+
+    // Handle clicks
+    toggle.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.lang-option');
+      if (!btn || !btn.dataset.lang) return;
+      const lang = btn.dataset.lang as 'en' | 'ja';
+      if (lang === getLanguage()) return;
+
+      // Update toggle UI
+      toggle.querySelectorAll('.lang-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      setLanguage(lang);
+    });
+
+    // Listen for language changes to clear caches and trigger re-renders
+    onLanguageChange((lang) => {
+      console.log(`[App] Language changed to: ${lang}`);
+
+      // Clear panel summary caches from localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('panel_summary_v2_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      // Clear client translation memory cache
+      clearTranslationCache();
+
+      // InsightsPanel will re-generate on its own via its onLanguageChange listener
+      // NewsPanels will also re-render on their own via their onLanguageChange listeners
+    });
   }
 
   private setupSourcesModal(): void {

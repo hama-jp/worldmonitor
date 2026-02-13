@@ -7,6 +7,8 @@ import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { analysisWorker, enrichWithVelocityML, getClusterAssetContext, getAssetLabel, MAX_DISTANCE_KM, activityTracker, generateSummary } from '@/services';
 import { getSourcePropagandaRisk, getSourceTier, getSourceType } from '@/config/feeds';
 import { SITE_VARIANT } from '@/config';
+import { getLanguage, onLanguageChange } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 /** Threshold for enabling virtual scrolling */
 const VIRTUAL_SCROLL_THRESHOLD = 15;
@@ -42,12 +44,25 @@ export class NewsPanel extends Panel {
   private currentHeadlines: string[] = [];
   private isSummarizing = false;
 
+  // Translation
+  private translatedTitles = new Map<string, string>();
+  private lastRenderedItems: NewsItem[] | null = null;
+  private unsubLanguage: (() => void) | null = null;
+
   constructor(id: string, title: string) {
     super({ id, title, showCount: true, trackActivity: true });
     this.createDeviationIndicator();
     this.createSummarizeButton();
     this.setupActivityTracking();
     this.initWindowedList();
+
+    // Re-render on language change
+    this.unsubLanguage = onLanguageChange(() => {
+      this.translatedTitles.clear();
+      if (this.lastRenderedItems) {
+        this.renderNews(this.lastRenderedItems);
+      }
+    });
   }
 
   private initWindowedList(): void {
@@ -137,7 +152,8 @@ export class NewsPanel extends Panel {
     if (this.currentHeadlines.length === 0) return;
 
     // Check cache first (include variant and version to bust old caches)
-    const cacheKey = `panel_summary_v2_${SITE_VARIANT}_${this.panelId}`;
+    const lang = getLanguage();
+    const cacheKey = `panel_summary_v2_${SITE_VARIANT}_${lang}_${this.panelId}`;
     const cached = this.getCachedSummary(cacheKey);
     if (cached) {
       this.showSummary(cached);
@@ -228,6 +244,8 @@ export class NewsPanel extends Panel {
   }
 
   public renderNews(items: NewsItem[]): void {
+    this.lastRenderedItems = items;
+
     if (items.length === 0) {
       this.showError('No news available');
       return;
@@ -266,7 +284,7 @@ export class NewsPanel extends Panel {
           ${escapeHtml(item.source)}
           ${item.isAlert ? '<span class="alert-tag">ALERT</span>' : ''}
         </div>
-        <a class="item-title" href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
+        <a class="item-title" href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener" data-original-title="${escapeHtml(item.title)}">${escapeHtml(this.translatedTitles.get(item.title) || item.title)}</a>
         <div class="item-time">${formatTime(item.pubDate)}</div>
       </div>
     `
@@ -274,6 +292,20 @@ export class NewsPanel extends Panel {
       .join('');
 
     this.setContent(html);
+
+    // Async translate if Japanese
+    if (getLanguage() === 'ja') {
+      const titles = items.map(i => i.title);
+      const needsTranslation = titles.some(t => !this.translatedTitles.has(t));
+      if (needsTranslation) {
+        translateTexts(titles).then(translated => {
+          for (let i = 0; i < titles.length; i++) {
+            this.translatedTitles.set(titles[i]!, translated[i]!);
+          }
+          this.updateTranslatedTitles();
+        });
+      }
+    }
   }
 
   private renderClusters(clusters: ClusteredEvent[]): void {
@@ -332,6 +364,37 @@ export class NewsPanel extends Panel {
       this.setContent(html);
       this.bindRelatedAssetEvents();
     }
+
+    // Async translate titles if language is Japanese
+    if (getLanguage() === 'ja') {
+      const titles = sorted.map(c => c.primaryTitle);
+      const needsTranslation = titles.some(t => !this.translatedTitles.has(t));
+      if (needsTranslation) {
+        const reqId = this.renderRequestId;
+        translateTexts(titles).then(translated => {
+          if (reqId !== this.renderRequestId) return;
+          for (let i = 0; i < titles.length; i++) {
+            this.translatedTitles.set(titles[i]!, translated[i]!);
+          }
+          // Re-render with translated titles (update DOM in-place)
+          this.updateTranslatedTitles();
+        });
+      }
+    }
+  }
+
+  /** Update displayed titles with translations without full re-render */
+  private updateTranslatedTitles(): void {
+    const titleEls = this.content.querySelectorAll<HTMLAnchorElement>('.item-title');
+    titleEls.forEach(el => {
+      const originalTitle = el.getAttribute('data-original-title');
+      if (originalTitle) {
+        const translated = this.translatedTitles.get(originalTitle);
+        if (translated && translated !== originalTitle) {
+          el.textContent = translated;
+        }
+      }
+    });
   }
 
   /**
@@ -442,7 +505,7 @@ export class NewsPanel extends Panel {
           ${cluster.isAlert ? '<span class="alert-tag">ALERT</span>' : ''}
           ${categoryBadge}
         </div>
-        <a class="item-title" href="${sanitizeUrl(cluster.primaryLink)}" target="_blank" rel="noopener">${escapeHtml(cluster.primaryTitle)}</a>
+        <a class="item-title" href="${sanitizeUrl(cluster.primaryLink)}" target="_blank" rel="noopener" data-original-title="${escapeHtml(cluster.primaryTitle)}">${escapeHtml(this.translatedTitles.get(cluster.primaryTitle) || cluster.primaryTitle)}</a>
         <div class="cluster-meta">
           <span class="top-sources">${topSourcesHtml}</span>
           <span class="item-time">${formatTime(cluster.lastUpdated)}</span>
@@ -489,7 +552,16 @@ export class NewsPanel extends Panel {
   /**
    * Clean up resources
    */
+  /** Clear translated titles cache (called on language change from App) */
+  public clearTranslations(): void {
+    this.translatedTitles.clear();
+  }
+
   public destroy(): void {
+    // Clean up language subscription
+    this.unsubLanguage?.();
+    this.unsubLanguage = null;
+
     // Clean up windowed list
     this.windowedList?.destroy();
     this.windowedList = null;

@@ -6,6 +6,7 @@
 
 import { mlWorker } from './ml-worker';
 import { SITE_VARIANT } from '@/config';
+import { getLanguage } from './language';
 
 export type SummarizationProvider = 'groq' | 'openrouter' | 'browser' | 'cache';
 
@@ -22,7 +23,7 @@ async function tryGroq(headlines: string[], geoContext?: string): Promise<Summar
     const response = await fetch('/api/groq-summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ headlines, mode: 'brief', geoContext, variant: SITE_VARIANT }),
+      body: JSON.stringify({ headlines, mode: 'brief', geoContext, variant: SITE_VARIANT, lang: getLanguage() }),
     });
 
     if (!response.ok) {
@@ -50,7 +51,7 @@ async function tryOpenRouter(headlines: string[], geoContext?: string): Promise<
     const response = await fetch('/api/openrouter-summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ headlines, mode: 'brief', geoContext, variant: SITE_VARIANT }),
+      body: JSON.stringify({ headlines, mode: 'brief', geoContext, variant: SITE_VARIANT, lang: getLanguage() }),
     });
 
     if (!response.ok) {
@@ -75,6 +76,11 @@ async function tryOpenRouter(headlines: string[], geoContext?: string): Promise<
 
 async function tryBrowserT5(headlines: string[]): Promise<SummarizationResult | null> {
   try {
+    if (getLanguage() === 'ja') {
+      console.log('[Summarization] Browser T5 does not support Japanese');
+      return null;
+    }
+
     if (!mlWorker.isAvailable) {
       console.log('[Summarization] Browser ML not available');
       return null;

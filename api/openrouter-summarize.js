@@ -29,15 +29,16 @@ function getRedis() {
 }
 
 // Cache version - increment to bust old caches after breaking changes
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 
 // Generate cache key from headlines, geoContext, and variant (same as groq endpoint)
-function getCacheKey(headlines, mode, geoContext = '', variant = 'full') {
+function getCacheKey(headlines, mode, geoContext = '', variant = 'full', lang = 'en') {
   const sorted = headlines.slice(0, 8).sort().join('|');
   const geoHash = geoContext ? ':g' + hashString(geoContext).slice(0, 6) : '';
   const hash = hashString(`${mode}:${sorted}`);
-  // Include variant and version to prevent cross-site cache collisions
-  return `summary:${CACHE_VERSION}:${variant}:${hash}${geoHash}`;
+  const langSuffix = lang !== 'en' ? `:${lang}` : '';
+  // Include variant, language, and version to prevent cross-site cache collisions
+  return `summary:${CACHE_VERSION}:${variant}:${hash}${geoHash}${langSuffix}`;
 }
 
 function hashString(str) {
@@ -102,7 +103,7 @@ export default async function handler(request) {
   }
 
   try {
-    const { headlines, mode = 'brief', geoContext = '', variant = 'full' } = await request.json();
+    const { headlines, mode = 'brief', geoContext = '', variant = 'full', lang = 'en' } = await request.json();
 
     if (!headlines || !Array.isArray(headlines) || headlines.length === 0) {
       return new Response(JSON.stringify({ error: 'Headlines array required' }), {
@@ -113,7 +114,7 @@ export default async function handler(request) {
 
     // Check Redis cache first (shared with Groq endpoint)
     const redisClient = getRedis();
-    const cacheKey = getCacheKey(headlines, mode, geoContext, variant);
+    const cacheKey = getCacheKey(headlines, mode, geoContext, variant, lang);
 
     if (redisClient) {
       try {
@@ -206,6 +207,13 @@ Rules:
       userPrompt = `Key takeaway:\n${headlineText}${intelSection}`;
     }
 
+    // Add Japanese instruction if requested
+    if (lang === 'ja') {
+      systemPrompt += '\nIMPORTANT: Write your entire response in Japanese (日本語).';
+    }
+
+    const maxTokens = lang === 'ja' ? 250 : 150;
+
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
@@ -221,7 +229,7 @@ Rules:
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 150,
+        max_tokens: maxTokens,
         top_p: 0.9,
       }),
     });

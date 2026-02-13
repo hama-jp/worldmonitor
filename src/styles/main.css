@@ -368,6 +368,40 @@ body.animations-paused *::after {
   color: var(--accent);
 }
 
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.lang-option {
+  padding: 2px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-option:hover {
+  color: var(--text);
+}
+
+.lang-option.active {
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
 .copy-link-btn {
   padding: 4px 10px;
   background: transparent;

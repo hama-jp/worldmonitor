@@ -9,6 +9,8 @@ import { getTheaterPostureSummaries } from '@/services/military-surge';
 import { isMobileDevice } from '@/utils';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { SITE_VARIANT } from '@/config';
+import { getLanguage, onLanguageChange } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 import type { ClusteredEvent, FocalPoint, MilitaryFlight } from '@/types';
 
 export class InsightsPanel extends Panel {
@@ -19,6 +21,7 @@ export class InsightsPanel extends Panel {
   private lastConvergenceZones: RegionalConvergence[] = [];
   private lastFocalPoints: FocalPoint[] = [];
   private lastMilitaryFlights: MilitaryFlight[] = [];
+  private lastClusters: ClusteredEvent[] = [];
   private static readonly BRIEF_COOLDOWN_MS = 120000; // 2 min cooldown (API has limits)
 
   constructor() {
@@ -40,6 +43,20 @@ export class InsightsPanel extends Panel {
       this.hide();
       this.isHidden = true;
     }
+
+    // Re-generate brief on language change
+    onLanguageChange(() => {
+      this.invalidateCachedBrief();
+      if (this.lastClusters.length > 0) {
+        void this.updateInsights(this.lastClusters);
+      }
+    });
+  }
+
+  /** Invalidate cached brief to force re-generation */
+  public invalidateCachedBrief(): void {
+    this.cachedBrief = null;
+    this.lastBriefUpdate = 0;
   }
 
   public setMilitaryFlights(flights: MilitaryFlight[]): void {
@@ -239,6 +256,7 @@ export class InsightsPanel extends Panel {
 
   public async updateInsights(clusters: ClusteredEvent[]): Promise<void> {
     if (this.isHidden) return;
+    this.lastClusters = clusters;
 
     if (clusters.length === 0) {
       this.setContent('<div class="insights-empty">Waiting for news data...</div>');
@@ -388,6 +406,21 @@ export class InsightsPanel extends Panel {
       </div>
       ${missedHtml}
     `);
+
+    // Translate breaking story titles if Japanese
+    if (getLanguage() === 'ja') {
+      const titles = clusters.map(c => c.primaryTitle.slice(0, 100));
+      translateTexts(titles).then(translated => {
+        const titleEls = this.content.querySelectorAll<HTMLSpanElement>('.insight-story-title');
+        titleEls.forEach((el, i) => {
+          if (translated[i]) {
+            el.textContent = translated[i].length > 100
+              ? translated[i].slice(0, 100) + '...'
+              : translated[i];
+          }
+        });
+      });
+    }
   }
 
   private renderWorldBrief(brief: string): string {
