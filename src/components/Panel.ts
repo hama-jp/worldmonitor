@@ -1,3 +1,6 @@
+import { t, tTooltip } from '@/config/translations';
+import { onLanguageChange } from '@/services/language';
+
 export interface PanelOptions {
   id: string;
   title: string;
@@ -49,7 +52,12 @@ export class Panel {
   protected countEl: HTMLElement | null = null;
   protected newBadgeEl: HTMLElement | null = null;
   protected panelId: string;
+  private titleEl: HTMLElement;
+  private originalTitle: string;
+  private tooltipEl: HTMLElement | null = null;
+  private originalTooltip: string | undefined;
   private tooltipCloseHandler: (() => void) | null = null;
+  private unsubLangBase: (() => void) | null = null;
   private resizeHandle: HTMLElement | null = null;
   private isResizing = false;
   private startY = 0;
@@ -60,6 +68,9 @@ export class Panel {
 
   constructor(options: PanelOptions) {
     this.panelId = options.id;
+    this.originalTitle = options.title;
+    this.originalTooltip = options.infoTooltip;
+
     this.element = document.createElement('div');
     this.element.className = `panel ${options.className || ''}`;
     this.element.dataset.panel = options.id;
@@ -72,7 +83,8 @@ export class Panel {
 
     const title = document.createElement('span');
     title.className = 'panel-title';
-    title.textContent = options.title;
+    title.textContent = t(options.title);
+    this.titleEl = title;
     headerLeft.appendChild(title);
 
     if (options.infoTooltip) {
@@ -83,7 +95,8 @@ export class Panel {
 
       const tooltip = document.createElement('div');
       tooltip.className = 'panel-info-tooltip';
-      tooltip.innerHTML = options.infoTooltip;
+      tooltip.innerHTML = tTooltip(this.panelId) || options.infoTooltip;
+      this.tooltipEl = tooltip;
 
       infoBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -140,6 +153,14 @@ export class Panel {
     }
 
     this.showLoading();
+
+    // Subscribe to language changes for live title/tooltip updates
+    this.unsubLangBase = onLanguageChange(() => {
+      this.titleEl.textContent = t(this.originalTitle);
+      if (this.tooltipEl && this.originalTooltip) {
+        this.tooltipEl.innerHTML = tTooltip(this.panelId) || this.originalTooltip;
+      }
+    });
   }
 
   private setupResizeHandlers(): void {
@@ -264,13 +285,13 @@ export class Panel {
           <div class="panel-radar-sweep"></div>
           <div class="panel-radar-dot"></div>
         </div>
-        <div class="panel-loading-text">${message}</div>
+        <div class="panel-loading-text">${t(message)}</div>
       </div>
     `;
   }
 
   public showError(message = 'Failed to load data'): void {
-    this.content.innerHTML = `<div class="error-message">${message}</div>`;
+    this.content.innerHTML = `<div class="error-message">${t(message)}</div>`;
   }
 
   public setCount(count: number): void {
@@ -320,7 +341,7 @@ export class Panel {
       return;
     }
 
-    this.newBadgeEl.textContent = count > 99 ? '99+' : `${count} new`;
+    this.newBadgeEl.textContent = count > 99 ? '99+' : `${count} ${t('new')}`;
     this.newBadgeEl.style.display = 'inline-flex';
     this.element.classList.add('has-new');
 
@@ -359,6 +380,10 @@ export class Panel {
    * Clean up event listeners and resources
    */
   public destroy(): void {
+    if (this.unsubLangBase) {
+      this.unsubLangBase();
+      this.unsubLangBase = null;
+    }
     if (this.tooltipCloseHandler) {
       document.removeEventListener('click', this.tooltipCloseHandler);
       this.tooltipCloseHandler = null;

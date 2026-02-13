@@ -78,6 +78,7 @@ import type { SearchResult } from '@/components/SearchModal';
 import { collectStoryData } from '@/services/story-data';
 import { getLanguage, setLanguage, onLanguageChange } from '@/services/language';
 import { clearTranslationCache } from '@/services/translation';
+import { t } from '@/config/translations';
 import { openStoryModal } from '@/components/StoryModal';
 import { INTEL_HOTSPOTS, CONFLICT_ZONES, MILITARY_BASES, UNDERSEA_CABLES, NUCLEAR_FACILITIES } from '@/config/geo';
 import { PIPELINES } from '@/config/pipelines';
@@ -1120,18 +1121,18 @@ export class App {
           </a>
           <div class="status-indicator">
             <span class="status-dot"></span>
-            <span>LIVE</span>
+            <span id="liveText">${t('LIVE')}</span>
           </div>
           <div class="region-selector">
             <select id="regionSelect" class="region-select">
-              <option value="global">Global</option>
-              <option value="america">Americas</option>
-              <option value="mena">MENA</option>
-              <option value="eu">Europe</option>
-              <option value="asia">Asia</option>
-              <option value="latam">Latin America</option>
-              <option value="africa">Africa</option>
-              <option value="oceania">Oceania</option>
+              <option value="global">${t('Global')}</option>
+              <option value="america">${t('Americas')}</option>
+              <option value="mena">${t('MENA')}</option>
+              <option value="eu">${t('Europe')}</option>
+              <option value="asia">${t('Asia')}</option>
+              <option value="latam">${t('Latin America')}</option>
+              <option value="africa">${t('Africa')}</option>
+              <option value="oceania">${t('Oceania')}</option>
             </select>
           </div>
         </div>
@@ -1140,19 +1141,19 @@ export class App {
             <button class="lang-option active" data-lang="en">EN</button>
             <button class="lang-option" data-lang="ja">JA</button>
           </div>
-          <button class="search-btn" id="searchBtn"><kbd>⌘K</kbd> Search</button>
-          <button class="copy-link-btn" id="copyLinkBtn">Copy Link</button>
+          <button class="search-btn" id="searchBtn"><kbd>⌘K</kbd> ${t('Search')}</button>
+          <button class="copy-link-btn" id="copyLinkBtn">${t('Copy Link')}</button>
           <span class="time-display" id="timeDisplay">--:--:-- UTC</span>
           <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
-          <button class="settings-btn" id="settingsBtn">⚙ PANELS</button>
-          <button class="sources-btn" id="sourcesBtn">📡 SOURCES</button>
+          <button class="settings-btn" id="settingsBtn">⚙ ${t('PANELS')}</button>
+          <button class="sources-btn" id="sourcesBtn">📡 ${t('SOURCES')}</button>
         </div>
       </div>
       <div class="main-content">
         <div class="map-section" id="mapSection">
           <div class="panel-header">
             <div class="panel-header-left">
-              <span class="panel-title">${SITE_VARIANT === 'tech' ? 'Global Tech' : 'Global Situation'}</span>
+              <span class="panel-title" id="mapTitle">${t(SITE_VARIANT === 'tech' ? 'Global Tech' : 'Global Situation')}</span>
             </div>
             <button class="map-pin-btn" id="mapPinBtn" title="Pin map to top">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1168,7 +1169,7 @@ export class App {
       <div class="modal-overlay" id="settingsModal">
         <div class="modal">
           <div class="modal-header">
-            <span class="modal-title">Panel Settings</span>
+            <span class="modal-title" id="settingsModalTitle">${t('Panel Settings')}</span>
             <button class="modal-close" id="modalClose">×</button>
           </div>
           <div class="panel-toggle-grid" id="panelToggles"></div>
@@ -1177,17 +1178,17 @@ export class App {
       <div class="modal-overlay" id="sourcesModal">
         <div class="modal sources-modal">
           <div class="modal-header">
-            <span class="modal-title">News Sources</span>
+            <span class="modal-title" id="sourcesModalTitle">${t('News Sources')}</span>
             <span class="sources-counter" id="sourcesCounter"></span>
             <button class="modal-close" id="sourcesModalClose">×</button>
           </div>
           <div class="sources-search">
-            <input type="text" id="sourcesSearch" placeholder="Filter sources..." />
+            <input type="text" id="sourcesSearch" placeholder="${t('Filter sources...')}" />
           </div>
           <div class="sources-toggle-grid" id="sourceToggles"></div>
           <div class="sources-footer">
-            <button class="sources-select-all" id="sourcesSelectAll">Select All</button>
-            <button class="sources-select-none" id="sourcesSelectNone">Select None</button>
+            <button class="sources-select-all" id="sourcesSelectAll">${t('Select All')}</button>
+            <button class="sources-select-none" id="sourcesSelectNone">${t('Select None')}</button>
           </div>
         </div>
       </div>
@@ -1791,7 +1792,7 @@ export class App {
       const button = document.getElementById('copyLinkBtn');
       try {
         await this.copyToClipboard(shareUrl);
-        this.setCopyLinkFeedback(button, 'Copied!');
+        this.setCopyLinkFeedback(button, t('Copied!'));
       } catch (error) {
         console.warn('Failed to copy share link:', error);
         this.setCopyLinkFeedback(button, 'Copy failed');
@@ -2034,7 +2035,7 @@ export class App {
         ([key, panel]) => `
         <div class="panel-toggle-item ${panel.enabled ? 'active' : ''}" data-panel="${key}">
           <div class="panel-toggle-checkbox">${panel.enabled ? '✓' : ''}</div>
-          <span class="panel-toggle-label">${panel.name}</span>
+          <span class="panel-toggle-label">${t(panel.name)}</span>
         </div>
       `
       )
@@ -2146,6 +2147,59 @@ export class App {
 
       // Clear client translation memory cache
       clearTranslationCache();
+
+      // ── Update static header/modal UI text ──
+      const liveText = document.getElementById('liveText');
+      if (liveText) liveText.textContent = t('LIVE');
+
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchBtn) searchBtn.innerHTML = `<kbd>⌘K</kbd> ${t('Search')}`;
+
+      const copyLinkBtn = document.getElementById('copyLinkBtn');
+      if (copyLinkBtn) copyLinkBtn.textContent = t('Copy Link');
+
+      const settingsBtn = document.getElementById('settingsBtn');
+      if (settingsBtn) settingsBtn.innerHTML = `⚙ ${t('PANELS')}`;
+
+      const sourcesBtn = document.getElementById('sourcesBtn');
+      if (sourcesBtn) sourcesBtn.innerHTML = `📡 ${t('SOURCES')}`;
+
+      // Region selector
+      const regionSelect = document.getElementById('regionSelect') as HTMLSelectElement | null;
+      if (regionSelect) {
+        const regionLabels: Record<string, string> = {
+          global: 'Global', america: 'Americas', mena: 'MENA', eu: 'Europe',
+          asia: 'Asia', latam: 'Latin America', africa: 'Africa', oceania: 'Oceania',
+        };
+        Array.from(regionSelect.options).forEach(opt => {
+          const enLabel = regionLabels[opt.value];
+          if (enLabel) opt.textContent = t(enLabel);
+        });
+      }
+
+      // Map title
+      const mapTitle = document.getElementById('mapTitle');
+      if (mapTitle) mapTitle.textContent = t(SITE_VARIANT === 'tech' ? 'Global Tech' : 'Global Situation');
+
+      // Modal titles
+      const settingsModalTitle = document.getElementById('settingsModalTitle');
+      if (settingsModalTitle) settingsModalTitle.textContent = t('Panel Settings');
+
+      const sourcesModalTitle = document.getElementById('sourcesModalTitle');
+      if (sourcesModalTitle) sourcesModalTitle.textContent = t('News Sources');
+
+      // Sources modal controls
+      const sourcesSearch = document.getElementById('sourcesSearch') as HTMLInputElement | null;
+      if (sourcesSearch) sourcesSearch.placeholder = t('Filter sources...');
+
+      const selectAll = document.getElementById('sourcesSelectAll');
+      if (selectAll) selectAll.textContent = t('Select All');
+
+      const selectNone = document.getElementById('sourcesSelectNone');
+      if (selectNone) selectNone.textContent = t('Select None');
+
+      // Re-render panel toggles (settings modal) with translated names
+      this.renderPanelToggles();
 
       // InsightsPanel will re-generate on its own via its onLanguageChange listener
       // NewsPanels will also re-render on their own via their onLanguageChange listeners

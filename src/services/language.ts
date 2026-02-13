@@ -17,7 +17,9 @@ export function setLanguage(lang: Language): void {
   const prev = getLanguage();
   localStorage.setItem(STORAGE_KEY, lang);
   if (lang !== prev) {
-    listeners.forEach(cb => cb(lang));
+    listeners.forEach(cb => {
+      try { cb(lang); } catch (e) { console.error('[Language] listener error:', e); }
+    });
   }
 }
 
