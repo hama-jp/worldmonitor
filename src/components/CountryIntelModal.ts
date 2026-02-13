@@ -4,6 +4,8 @@
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import type { CountryScore } from '@/services/country-instability';
 import type { PredictionMarket } from '@/types';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 interface CountryIntelData {
   brief: string;
@@ -239,6 +241,21 @@ export class CountryIntelModal {
     }).join('');
 
     section.innerHTML = `<div class="markets-label">📊 Prediction Markets</div>${items}`;
+
+    if (getLanguage() === 'ja') {
+      const titles = markets.map(m => m.title.slice(0, 80));
+      translateTexts(titles).then(translated => {
+        const titleEls = section.querySelectorAll<HTMLElement>('.market-title');
+        titleEls.forEach((el, i) => {
+          // Preserve the link element if present
+          const link = el.querySelector('a');
+          const text = translated[i] || '';
+          el.textContent = '';
+          el.appendChild(document.createTextNode(text));
+          if (link) el.appendChild(link);
+        });
+      });
+    }
   }
 
   public updateStock(data: StockIndexData): void {

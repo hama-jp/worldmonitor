@@ -6,6 +6,8 @@ import { getChangeClass, formatChange } from '@/services/fred';
 import { formatOilValue, getTrendIndicator, getTrendColor } from '@/services/oil-analytics';
 import { formatAwardAmount, getAwardTypeIcon } from '@/services/usa-spending';
 import { escapeHtml } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 type TabId = 'indicators' | 'oil' | 'spending';
 
@@ -92,6 +94,28 @@ export class EconomicPanel extends Panel {
         <span class="economic-source">${this.getSourceLabel()} • ${updateTime}</span>
       </div>
     `);
+
+    // Translate award descriptions and indicator names if Japanese
+    if (getLanguage() === 'ja') {
+      const descEls = this.content.querySelectorAll<HTMLElement>('.award-desc');
+      const recipientEls = this.content.querySelectorAll<HTMLElement>('.award-recipient');
+      const indicatorNameEls = this.content.querySelectorAll<HTMLElement>('.indicator-name');
+      const texts = [
+        ...Array.from(descEls).map(el => el.textContent || ''),
+        ...Array.from(recipientEls).map(el => el.textContent || ''),
+        ...Array.from(indicatorNameEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          let idx = 0;
+          descEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += descEls.length;
+          recipientEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += recipientEls.length;
+          indicatorNameEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+        });
+      }
+    }
 
     // Bind tab click events
     this.content.querySelectorAll('.economic-tab').forEach(tab => {

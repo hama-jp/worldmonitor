@@ -1,5 +1,7 @@
 import { Panel } from './Panel';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 interface TechEventCoords {
   lat: number;
@@ -114,6 +116,17 @@ export class TechEventsPanel extends Panel {
         </div>
       </div>
     `;
+
+    // Translate event titles if Japanese
+    if (getLanguage() === 'ja') {
+      const titleEls = this.content.querySelectorAll<HTMLElement>('.event-title');
+      const texts = Array.from(titleEls).map(el => el.textContent || '');
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          titleEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+        });
+      }
+    }
 
     // Add tab listeners
     this.content.querySelectorAll('.tab').forEach(tab => {

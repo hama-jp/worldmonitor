@@ -1,6 +1,8 @@
 import { Panel } from './Panel';
 import type { TechHubActivity } from '@/services/tech-activity';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   'USA': '🇺🇸', 'United States': '🇺🇸',
@@ -131,6 +133,16 @@ export class TechHubsPanel extends Panel {
 
     this.setContent(html);
     this.bindEvents();
+
+    if (getLanguage() === 'ja') {
+      const storyEls = this.content.querySelectorAll<HTMLElement>('.hub-top-story');
+      const texts = Array.from(storyEls).map(el => el.textContent?.trim() || '');
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          storyEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+        });
+      }
+    }
   }
 
   private bindEvents(): void {

@@ -8,6 +8,8 @@ import {
   type DependencyGraph,
 } from '@/services/infrastructure-cascade';
 import type { CascadeResult, CascadeImpactLevel, InfrastructureNode } from '@/types';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 type NodeFilter = 'all' | 'cable' | 'pipeline' | 'port' | 'chokepoint';
 
@@ -191,6 +193,28 @@ export class CascadePanel extends Panel {
         ${this.cascadeResult ? this.renderCascadeResult() : '<div class="cascade-hint">Select infrastructure to analyze cascade impact</div>'}
       </div>
     `;
+
+    // Translate country and infrastructure names if Japanese
+    if (getLanguage() === 'ja') {
+      const countryEls = this.content.querySelectorAll<HTMLElement>('.cascade-country-name');
+      const sourceEls = this.content.querySelectorAll<HTMLElement>('.cascade-source-name');
+      const redundancyEls = this.content.querySelectorAll<HTMLElement>('.cascade-redundancy-name');
+      const texts = [
+        ...Array.from(countryEls).map(el => el.textContent || ''),
+        ...Array.from(sourceEls).map(el => el.textContent || ''),
+        ...Array.from(redundancyEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          let idx = 0;
+          countryEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += countryEls.length;
+          sourceEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += sourceEls.length;
+          redundancyEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+        });
+      }
+    }
 
     this.attachEventListeners();
   }

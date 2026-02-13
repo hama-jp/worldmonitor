@@ -1,6 +1,8 @@
 import { Panel } from './Panel';
 import { escapeHtml } from '@/utils/sanitize';
 import type { UcdpGeoEvent, UcdpEventType } from '@/types';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class UcdpEventsPanel extends Panel {
   private events: UcdpGeoEvent[] = [];
@@ -97,6 +99,23 @@ export class UcdpEventsPanel extends Panel {
       <div class="ucdp-tabs">${tabsHtml}</div>
       <div class="ucdp-events-list">${eventsHtml}${moreHtml}</div>
     `);
+
+    // Translate actor names if Japanese
+    if (getLanguage() === 'ja') {
+      const sideAEls = this.content.querySelectorAll<HTMLElement>('.ucdp-side-a');
+      const sideBEls = this.content.querySelectorAll<HTMLElement>('.ucdp-side-b');
+      const texts = [
+        ...Array.from(sideAEls).map(el => el.textContent || ''),
+        ...Array.from(sideBEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          const half = sideAEls.length;
+          sideAEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+          sideBEls.forEach((el, i) => { if (translated[half + i]) el.textContent = translated[half + i]!; });
+        });
+      }
+    }
 
     this.content.querySelectorAll('.panel-tab').forEach(btn => {
       btn.addEventListener('click', () => {

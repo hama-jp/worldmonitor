@@ -1,5 +1,7 @@
 import type { PizzIntStatus, GdeltTensionPair } from '@/types';
 import { escapeHtml } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 const DEFCON_COLORS: Record<number, string> = {
   1: '#ff0040',
@@ -270,6 +272,17 @@ export class PizzIntIndicator {
 
     const timeAgo = this.formatTimeAgo(this.status.lastUpdate);
     updatedEl.textContent = `Updated ${timeAgo}`;
+
+    // Translate location names if Japanese
+    if (getLanguage() === 'ja') {
+      const nameEls = this.element.querySelectorAll<HTMLElement>('.pizzint-location-name');
+      const texts = Array.from(nameEls).map(el => el.textContent || '');
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          nameEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+        });
+      }
+    }
   }
 
   private renderTensions(): void {
@@ -290,6 +303,17 @@ export class PizzIntIndicator {
         </div>
       `;
     }).join('');
+
+    // Translate tension labels if Japanese
+    if (getLanguage() === 'ja') {
+      const labelEls = this.element.querySelectorAll<HTMLElement>('.pizzint-tension-label');
+      const texts = Array.from(labelEls).map(el => el.textContent || '');
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          labelEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+        });
+      }
+    }
   }
 
   private getStatusClass(loc: { is_closed_now: boolean; is_spike: boolean; current_popularity: number }): string {

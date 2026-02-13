@@ -1,6 +1,8 @@
 import { Panel } from './Panel';
 import { escapeHtml } from '@/utils/sanitize';
 import { calculateCII, type CountryScore } from '@/services/country-instability';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class CIIPanel extends Panel {
   private scores: CountryScore[] = [];
@@ -128,6 +130,17 @@ export class CIIPanel extends Panel {
       const html = withData.map(s => this.renderCountry(s)).join('');
       this.content.innerHTML = `<div class="cii-list">${html}</div>`;
       this.bindShareButtons();
+
+      // Translate country names if Japanese
+      if (getLanguage() === 'ja') {
+        const nameEls = this.content.querySelectorAll<HTMLElement>('.cii-name');
+        const texts = Array.from(nameEls).map(el => el.textContent || '');
+        if (texts.length > 0) {
+          translateTexts(texts).then(translated => {
+            nameEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+          });
+        }
+      }
     } catch (error) {
       console.error('[CIIPanel] Refresh error:', error);
       this.showError('Failed to calculate CII');

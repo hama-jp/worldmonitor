@@ -2,6 +2,8 @@ import { Panel } from './Panel';
 import { escapeHtml } from '@/utils/sanitize';
 import type { ClimateAnomaly } from '@/types';
 import { getSeverityColor, getSeverityIcon, formatDelta } from '@/services/climate';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class ClimateAnomalyPanel extends Panel {
   private anomalies: ClimateAnomaly[] = [];
@@ -68,6 +70,17 @@ export class ClimateAnomalyPanel extends Panel {
     }).join('');
 
     this.setContent(`<div class="climate-list">${listHtml}</div>`);
+
+    // Translate zone names if Japanese
+    if (getLanguage() === 'ja') {
+      const nameEls = this.content.querySelectorAll<HTMLElement>('.climate-name');
+      const texts = Array.from(nameEls).map(el => el.textContent || '');
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          nameEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+        });
+      }
+    }
 
     this.content.querySelectorAll('.climate-zone').forEach(el => {
       el.addEventListener('click', () => {

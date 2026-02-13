@@ -1,5 +1,7 @@
 import { Panel } from './Panel';
 import { escapeHtml } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 import {
   calculateStrategicRiskOverview,
   getRecentAlerts,
@@ -403,6 +405,26 @@ export class StrategicRiskPanel extends Panel {
 
     this.content.innerHTML = html;
     this.attachEventListeners();
+
+    // Translate risks and alerts if Japanese
+    if (getLanguage() === 'ja') {
+      const riskEls = this.content.querySelectorAll<HTMLElement>('.risk-text');
+      const alertTitleEls = this.content.querySelectorAll<HTMLElement>('.risk-alert-title');
+      const alertSummaryEls = this.content.querySelectorAll<HTMLElement>('.risk-alert-summary');
+      const texts = [
+        ...Array.from(riskEls).map(el => el.textContent || ''),
+        ...Array.from(alertTitleEls).map(el => el.textContent || ''),
+        ...Array.from(alertSummaryEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          let idx = 0;
+          riskEls.forEach(el => { el.textContent = translated[idx++]!; });
+          alertTitleEls.forEach(el => { el.textContent = translated[idx++]!; });
+          alertSummaryEls.forEach(el => { el.textContent = translated[idx++]!; });
+        });
+      }
+    }
   }
 
   private attachEventListeners(): void {

@@ -3,6 +3,8 @@ import { escapeHtml } from '@/utils/sanitize';
 import { fetchCachedTheaterPosture, type CachedTheaterPosture } from '@/services/cached-theater-posture';
 import { fetchMilitaryVessels, isMilitaryVesselTrackingConfigured } from '@/services/military-vessels';
 import { recalcPostureWithVessels, type TheaterPostureSummary } from '@/services/military-surge';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class StrategicPosturePanel extends Panel {
   private postures: TheaterPostureSummary[] = [];
@@ -471,6 +473,24 @@ export class StrategicPosturePanel extends Panel {
     `;
 
     this.setContent(html);
+
+    // Translate theater names and target nations if Japanese
+    if (getLanguage() === 'ja') {
+      const nameEls = this.content.querySelectorAll<HTMLElement>('.posture-name');
+      const focusEls = this.content.querySelectorAll<HTMLElement>('.posture-focus');
+      const texts = [
+        ...Array.from(nameEls).map(el => el.textContent || ''),
+        ...Array.from(focusEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          const nameCount = nameEls.length;
+          nameEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+          focusEls.forEach((el, i) => { if (translated[nameCount + i]) el.textContent = translated[nameCount + i]!; });
+        });
+      }
+    }
+
     this.attachEventListeners();
   }
 

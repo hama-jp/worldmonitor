@@ -7,6 +7,8 @@ import {
   getRecentActions,
 } from '@/config';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class RegulationPanel extends Panel {
   private viewMode: 'timeline' | 'deadlines' | 'regulations' | 'countries' = 'timeline';
@@ -33,6 +35,23 @@ export class RegulationPanel extends Panel {
         </div>
       </div>
     `;
+
+    // Translate content if Japanese
+    if (getLanguage() === 'ja') {
+      const titleEls = this.content.querySelectorAll<HTMLElement>('.timeline-content h5, .regulation-card h5, .deadline-content h5');
+      const descEls = this.content.querySelectorAll<HTMLElement>('.timeline-content p, .regulation-description, .country-summary');
+      const texts = [
+        ...Array.from(titleEls).map(el => el.textContent || ''),
+        ...Array.from(descEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          const titleCount = titleEls.length;
+          titleEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+          descEls.forEach((el, i) => { if (translated[titleCount + i]) el.textContent = translated[titleCount + i]!; });
+        });
+      }
+    }
 
     // Add event listeners for tabs
     this.content.querySelectorAll('.tab').forEach(tab => {

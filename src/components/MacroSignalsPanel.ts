@@ -1,5 +1,7 @@
 import { Panel } from './Panel';
 import { escapeHtml } from '@/utils/sanitize';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 interface MacroSignalData {
   timestamp: string;
@@ -130,6 +132,23 @@ export class MacroSignalsPanel extends Panel {
     `;
 
     this.setContent(html);
+
+    // Translate signal names and details if Japanese
+    if (getLanguage() === 'ja') {
+      const nameEls = this.content.querySelectorAll<HTMLElement>('.signal-name');
+      const detailEls = this.content.querySelectorAll<HTMLElement>('.signal-detail');
+      const texts = [
+        ...Array.from(nameEls).map(el => el.textContent || ''),
+        ...Array.from(detailEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          const nameCount = nameEls.length;
+          nameEls.forEach((el, i) => { if (translated[i]) el.textContent = translated[i]!; });
+          detailEls.forEach((el, i) => { if (translated[nameCount + i]) el.textContent = translated[nameCount + i]!; });
+        });
+      }
+    }
   }
 
   private renderSignalCard(name: string, status: string, value: string, sparkline: string, detail: string, link: string | null): string {

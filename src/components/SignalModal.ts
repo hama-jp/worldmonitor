@@ -2,6 +2,8 @@ import type { CorrelationSignal } from '@/services/correlation';
 import type { UnifiedAlert } from '@/services/cross-module-integration';
 import { escapeHtml } from '@/utils/sanitize';
 import { getSignalContext, type SignalType } from '@/utils/analysis-constants';
+import { getLanguage } from '@/services/language';
+import { translateTexts } from '@/services/translation';
 
 export class SignalModal {
   private element: HTMLElement;
@@ -198,6 +200,28 @@ export class SignalModal {
     `;
 
     this.element.classList.add('active');
+
+    // Translate alert content if Japanese
+    if (getLanguage() === 'ja') {
+      const titleEls = content.querySelectorAll<HTMLElement>('.signal-title');
+      const descEls = content.querySelectorAll<HTMLElement>('.signal-description');
+      const contextValEls = content.querySelectorAll<HTMLElement>('.context-value');
+      const texts = [
+        ...Array.from(titleEls).map(el => el.textContent || ''),
+        ...Array.from(descEls).map(el => el.textContent || ''),
+        ...Array.from(contextValEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          let idx = 0;
+          titleEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += titleEls.length;
+          descEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += descEls.length;
+          contextValEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+        });
+      }
+    }
   }
 
   public playSound(): void {
@@ -292,6 +316,28 @@ export class SignalModal {
     }).join('');
 
     content.innerHTML = html;
+
+    // Translate signal titles, descriptions, and context if Japanese
+    if (getLanguage() === 'ja') {
+      const titleEls = content.querySelectorAll<HTMLElement>('.signal-title');
+      const descEls = content.querySelectorAll<HTMLElement>('.signal-description');
+      const contextEls = content.querySelectorAll<HTMLElement>('.context-value');
+      const texts = [
+        ...Array.from(titleEls).map(el => el.textContent || ''),
+        ...Array.from(descEls).map(el => el.textContent || ''),
+        ...Array.from(contextEls).map(el => el.textContent || ''),
+      ];
+      if (texts.length > 0) {
+        translateTexts(texts).then(translated => {
+          let idx = 0;
+          titleEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += titleEls.length;
+          descEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+          idx += descEls.length;
+          contextEls.forEach((el, i) => { if (translated[idx + i]) el.textContent = translated[idx + i]!; });
+        });
+      }
+    }
   }
 
   private formatTime(date: Date): string {
