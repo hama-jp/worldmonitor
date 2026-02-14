@@ -1090,12 +1090,34 @@ export class App {
     this.map?.setHotspotLevels(snapshot.hotspotLevels);
   }
 
+  /**
+   * Build variant switch URL. Uses known production domains when on production,
+   * otherwise uses the current host with a ?variant= query parameter.
+   */
+  private getVariantUrl(target: 'full' | 'tech'): string {
+    const host = window.location.hostname;
+    // Production domains — direct cross-domain switch
+    if (host === 'worldmonitor.app' || host === 'www.worldmonitor.app') {
+      return target === 'tech' ? 'https://tech.worldmonitor.app' : 'https://worldmonitor.app';
+    }
+    if (host === 'tech.worldmonitor.app') {
+      return target === 'full' ? 'https://worldmonitor.app' : 'https://tech.worldmonitor.app';
+    }
+    if (host === 'startups.worldmonitor.app') {
+      return target === 'full' ? 'https://worldmonitor.app' : 'https://startups.worldmonitor.app';
+    }
+    // Preview / dev deployments — stay on same host, toggle via query param
+    const url = new URL(window.location.href);
+    url.searchParams.set('variant', target);
+    return url.toString();
+  }
+
   private renderLayout(): void {
     this.container.innerHTML = `
       <div class="header">
         <div class="header-left">
           <div class="variant-switcher">
-            <a href="${SITE_VARIANT === 'tech' ? 'https://worldmonitor.app' : '#'}"
+            <a href="${SITE_VARIANT === 'tech' ? this.getVariantUrl('full') : '#'}"
                class="variant-option ${SITE_VARIANT !== 'tech' ? 'active' : ''}"
                data-variant="world"
                title="Geopolitical Intelligence">
@@ -1103,7 +1125,7 @@ export class App {
               <span class="variant-label">WORLD</span>
             </a>
             <span class="variant-divider"></span>
-            <a href="${SITE_VARIANT === 'tech' ? '#' : 'https://tech.worldmonitor.app'}"
+            <a href="${SITE_VARIANT === 'tech' ? '#' : this.getVariantUrl('tech')}"
                class="variant-option ${SITE_VARIANT === 'tech' ? 'active' : ''}"
                data-variant="tech"
                title="Tech & AI Intelligence">
