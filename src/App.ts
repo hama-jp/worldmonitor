@@ -547,7 +547,7 @@ export class App {
         const res = await fetch('/api/country-intel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ country: geo.country, code: geo.code, context }),
+          body: JSON.stringify({ country: geo.country, code: geo.code, context, lang: getLanguage() }),
         });
         const data = await res.json();
         this.countryIntelModal!.updateBrief({ ...data, code: geo.code });

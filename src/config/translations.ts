@@ -143,6 +143,29 @@ const ja: Record<string, string> = {
   'Failed to calculate CII': 'CIIの計算に失敗しました',
   'All sources disabled': 'すべてのソースが無効です',
   'All Intel sources disabled': 'すべてのインテルソースが無効です',
+
+  // Country Intel Modal
+  'Identifying country...': '国を特定中…',
+  'Locating region...': '地域を特定中…',
+  'Instability Index': '不安定指数',
+  'Unrest': '不安',
+  'Conflict': '紛争',
+  'Security': '安全保障',
+  'Information': '情報',
+  'rising': '上昇',
+  'falling': '下降',
+  'stable': '安定',
+  'protests': '件の抗議',
+  'mil. aircraft': '機の軍用機',
+  'mil. vessels': '隻の軍艦',
+  'outages': '件の障害',
+  'earthquakes': '件の地震',
+  'Loading index...': '指数を読み込み中…',
+  'Loading prediction markets...': '予測市場を読み込み中…',
+  'Generating intelligence brief...': 'インテリジェンスブリーフを生成中…',
+  'Cached': 'キャッシュ',
+  'Fresh': '最新',
+  'No prediction markets found': '予測市場が見つかりません',
 };
 
 // ─── Tooltip translations (keyed by panel ID) ──────────────────────────────

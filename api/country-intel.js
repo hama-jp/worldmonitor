@@ -59,7 +59,8 @@ export default async function handler(request) {
   }
 
   try {
-    const { country, code, context } = await request.json();
+    const { country, code, context, lang } = await request.json();
+    const isJa = lang === 'ja';
 
     if (!country || !code) {
       return new Response(JSON.stringify({ error: 'country and code required' }), {
@@ -70,7 +71,7 @@ export default async function handler(request) {
 
     // Cache key includes country code + context hash (context changes as data updates)
     const contextHash = context ? hashString(JSON.stringify(context)).slice(0, 8) : 'no-ctx';
-    const cacheKey = `${CACHE_VERSION}:${code}:${contextHash}`;
+    const cacheKey = `${CACHE_VERSION}:${code}:${contextHash}:${isJa ? 'ja' : 'en'}`;
 
     const redisClient = getRedis();
     if (redisClient) {
@@ -122,7 +123,30 @@ export default async function handler(request) {
 
     const dateStr = new Date().toISOString().split('T')[0];
 
-    const systemPrompt = `You are a senior intelligence analyst providing comprehensive country situation briefs. Current date: ${dateStr}. Donald Trump is the current US President (second term, inaugurated Jan 2025).
+    const systemPrompt = isJa
+      ? `あなたは包括的な国別情勢ブリーフを提供する上級インテリジェンスアナリストです。現在の日付: ${dateStr}。ドナルド・トランプが現在の米大統領（2期目、2025年1月就任）。
+
+以下の構成で、データに基づいた徹底的なインテリジェンスブリーフを日本語で作成してください:
+
+1. **現在の状況** — 今何が起きているか。不安定性スコア、抗議件数、軍事プレゼンス、障害などの具体的なデータを引用し、文脈の中でその数値が何を意味するかを説明する。
+
+2. **軍事・安全保障態勢** — 当該国内外の軍事活動を分析。どのような戦力が展開されているか、その配置は何を示唆するか、外国はこの地域で何をしているか。
+
+3. **主要リスク要因** — 不安定性または安定性の要因。異なるシグナル間の関連性を分析する（抗議＋障害＝弾圧の可能性？軍事増強＋外交的緊張＝エスカレーションリスク？）。見出しを具体的に引用。
+
+4. **地域的文脈** — この国の状況が近隣諸国や広域地域にどう影響するか。収束アラートがあれば引用。
+
+5. **見通しと注視項目** — 短期的に何を監視すべきか。エスカレーションまたはデエスカレーションを示す具体的な指標を示す。
+
+ルール:
+- 具体的かつ分析的に。提供されたデータ（スコア、件数、見出し、収束）を引用すること。
+- データが低い活動を示す場合はそう述べる。脅威を捏造しない。
+- シグナルを関連付ける: データポイントの組み合わせが何を示唆するか説明。
+- 5-6段落、300-400語。
+- データが裏付ける範囲を超えた推測はしない。
+- 専門用語ではなく平易な言葉を使う。
+- 軍事資産が0の場合、軍事プレゼンスについて推測せず、監視上軍事活動は検出されていないと述べる。`
+      : `You are a senior intelligence analyst providing comprehensive country situation briefs. Current date: ${dateStr}. Donald Trump is the current US President (second term, inaugurated Jan 2025).
 
 Write a thorough, data-driven intelligence brief for the requested country. Structure:
 

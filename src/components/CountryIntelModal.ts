@@ -6,6 +6,7 @@ import type { CountryScore } from '@/services/country-instability';
 import type { PredictionMarket } from '@/types';
 import { getLanguage } from '@/services/language';
 import { translateTexts } from '@/services/translation';
+import { t } from '@/config/translations';
 
 interface CountryIntelData {
   brief: string;
@@ -109,14 +110,14 @@ export class CountryIntelModal {
     this.currentCode = '__loading__';
     this.headerEl.innerHTML = `
       <span class="country-flag">🌍</span>
-      <span class="country-name">Identifying country...</span>
+      <span class="country-name">${t('Identifying country...')}</span>
     `;
     this.contentEl.innerHTML = `
       <div class="intel-brief-section">
         <div class="intel-brief-loading">
           <div class="intel-skeleton"></div>
           <div class="intel-skeleton short"></div>
-          <span class="intel-loading-text">Locating region...</span>
+          <span class="intel-loading-text">${t('Locating region...')}</span>
         </div>
       </div>
     `;
@@ -149,13 +150,13 @@ export class CountryIntelModal {
     if (score) {
       html += `
         <div class="cii-section">
-          <div class="cii-label">Instability Index ${this.scoreBar(score.score)}</div>
+          <div class="cii-label">${t('Instability Index')} ${this.scoreBar(score.score)}</div>
           <div class="cii-components">
-            <span title="Unrest">📢 ${score.components.unrest.toFixed(0)}</span>
-            <span title="Conflict">⚔ ${score.components.conflict.toFixed(0)}</span>
-            <span title="Security">🛡️ ${score.components.security.toFixed(0)}</span>
-            <span title="Information">📡 ${score.components.information.toFixed(0)}</span>
-            <span class="cii-trend ${score.trend}">${score.trend === 'rising' ? '↗' : score.trend === 'falling' ? '↘' : '→'} ${score.trend}</span>
+            <span title="${t('Unrest')}">📢 ${score.components.unrest.toFixed(0)}</span>
+            <span title="${t('Conflict')}">⚔ ${score.components.conflict.toFixed(0)}</span>
+            <span title="${t('Security')}">🛡️ ${score.components.security.toFixed(0)}</span>
+            <span title="${t('Information')}">📡 ${score.components.information.toFixed(0)}</span>
+            <span class="cii-trend ${score.trend}">${score.trend === 'rising' ? '↗' : score.trend === 'falling' ? '↘' : '→'} ${t(score.trend)}</span>
           </div>
         </div>
       `;
@@ -163,16 +164,16 @@ export class CountryIntelModal {
 
     const chips: string[] = [];
     if (signals) {
-      if (signals.protests > 0) chips.push(`<span class="signal-chip protest">📢 ${signals.protests} protests</span>`);
-      if (signals.militaryFlights > 0) chips.push(`<span class="signal-chip military">✈️ ${signals.militaryFlights} mil. aircraft</span>`);
-      if (signals.militaryVessels > 0) chips.push(`<span class="signal-chip military">⚓ ${signals.militaryVessels} mil. vessels</span>`);
-      if (signals.outages > 0) chips.push(`<span class="signal-chip outage">🌐 ${signals.outages} outages</span>`);
-      if (signals.earthquakes > 0) chips.push(`<span class="signal-chip quake">🌍 ${signals.earthquakes} earthquakes</span>`);
+      if (signals.protests > 0) chips.push(`<span class="signal-chip protest">📢 ${signals.protests} ${t('protests')}</span>`);
+      if (signals.militaryFlights > 0) chips.push(`<span class="signal-chip military">✈️ ${signals.militaryFlights} ${t('mil. aircraft')}</span>`);
+      if (signals.militaryVessels > 0) chips.push(`<span class="signal-chip military">⚓ ${signals.militaryVessels} ${t('mil. vessels')}</span>`);
+      if (signals.outages > 0) chips.push(`<span class="signal-chip outage">🌐 ${signals.outages} ${t('outages')}</span>`);
+      if (signals.earthquakes > 0) chips.push(`<span class="signal-chip quake">🌍 ${signals.earthquakes} ${t('earthquakes')}</span>`);
     }
-    chips.push(`<span class="signal-chip stock-loading">📈 Loading index...</span>`);
+    chips.push(`<span class="signal-chip stock-loading">📈 ${t('Loading index...')}</span>`);
     html += `<div class="active-signals">${chips.join('')}</div>`;
 
-    html += `<div class="country-markets-section"><span class="intel-loading-text">Loading prediction markets...</span></div>`;
+    html += `<div class="country-markets-section"><span class="intel-loading-text">${t('Loading prediction markets...')}</span></div>`;
 
     html += `
       <div class="intel-brief-section">
@@ -181,7 +182,7 @@ export class CountryIntelModal {
           <div class="intel-skeleton short"></div>
           <div class="intel-skeleton"></div>
           <div class="intel-skeleton short"></div>
-          <span class="intel-loading-text">Generating intelligence brief...</span>
+          <span class="intel-loading-text">${t('Generating intelligence brief...')}</span>
         </div>
       </div>
     `;
@@ -207,7 +208,7 @@ export class CountryIntelModal {
     briefSection.innerHTML = `
       <div class="intel-brief">${formatted}</div>
       <div class="intel-footer">
-        ${data.cached ? '<span class="intel-cached">📋 Cached</span>' : '<span class="intel-fresh">✨ Fresh</span>'}
+        ${data.cached ? `<span class="intel-cached">📋 ${t('Cached')}</span>` : `<span class="intel-fresh">✨ ${t('Fresh')}</span>`}
         <span class="intel-timestamp">${data.generatedAt ? new Date(data.generatedAt).toLocaleTimeString() : ''}</span>
       </div>
     `;
@@ -218,7 +219,7 @@ export class CountryIntelModal {
     if (!section) return;
 
     if (markets.length === 0) {
-      section.innerHTML = '<span class="intel-loading-text" style="opacity:0.5">No prediction markets found</span>';
+      section.innerHTML = `<span class="intel-loading-text" style="opacity:0.5">${t('No prediction markets found')}</span>`;
       return;
     }
 
@@ -240,7 +241,7 @@ export class CountryIntelModal {
       `;
     }).join('');
 
-    section.innerHTML = `<div class="markets-label">📊 Prediction Markets</div>${items}`;
+    section.innerHTML = `<div class="markets-label">📊 ${t('Prediction Markets')}</div>${items}`;
 
     if (getLanguage() === 'ja') {
       const titles = markets.map(m => m.title.slice(0, 80));
