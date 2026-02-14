@@ -1,4 +1,6 @@
 import { getSnapshotTimestamps, getSnapshotAt, type DashboardSnapshot } from '@/services/storage';
+import { t } from '@/config/translations';
+import { getLanguage } from '@/services/language';
 
 export class PlaybackControl {
   private element: HTMLElement;
@@ -21,12 +23,12 @@ export class PlaybackControl {
         </div>
         <div class="playback-slider-container">
           <input type="range" class="playback-slider" min="0" max="100" value="100">
-          <div class="playback-time">LIVE</div>
+          <div class="playback-time">${t('LIVE')}</div>
         </div>
         <div class="playback-controls">
           <button class="playback-btn" data-action="start">⏮</button>
           <button class="playback-btn" data-action="prev">◀</button>
-          <button class="playback-btn playback-live" data-action="live">LIVE</button>
+          <button class="playback-btn playback-live" data-action="live">${t('LIVE')}</button>
           <button class="playback-btn" data-action="next">▶</button>
           <button class="playback-btn" data-action="end">⏭</button>
         </div>
@@ -144,7 +146,7 @@ export class PlaybackControl {
     const display = this.element.querySelector('.playback-time')!;
 
     if (!this.isPlaybackMode || this.timestamps.length === 0) {
-      display.textContent = 'LIVE';
+      display.textContent = t('LIVE');
       display.classList.remove('historical');
       return;
     }
@@ -152,7 +154,7 @@ export class PlaybackControl {
     const timestamp = this.timestamps[this.currentIndex];
     if (timestamp) {
       const date = new Date(timestamp);
-      display.textContent = date.toLocaleString('en-US', {
+      display.textContent = date.toLocaleString(getLanguage() === 'ja' ? 'ja-JP' : 'en-US', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',

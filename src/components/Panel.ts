@@ -140,7 +140,7 @@ export class Panel {
     // Add resize handle
     this.resizeHandle = document.createElement('div');
     this.resizeHandle.className = 'panel-resize-handle';
-    this.resizeHandle.title = 'Drag to resize (double-click to reset)';
+    this.resizeHandle.title = t('Drag to resize (double-click to reset)');
     this.resizeHandle.draggable = false; // Prevent parent's drag from capturing
     this.element.appendChild(this.resizeHandle);
     this.setupResizeHandlers();

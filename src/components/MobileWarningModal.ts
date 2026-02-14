@@ -1,3 +1,5 @@
+import { t } from '@/config/translations';
+
 const STORAGE_KEY = 'mobile-warning-dismissed';
 
 export class MobileWarningModal {
@@ -10,18 +12,18 @@ export class MobileWarningModal {
       <div class="mobile-warning-modal">
         <div class="mobile-warning-header">
           <span class="mobile-warning-icon">📱</span>
-          <span class="mobile-warning-title">Mobile View</span>
+          <span class="mobile-warning-title">${t('Mobile View')}</span>
         </div>
         <div class="mobile-warning-content">
-          <p>You're viewing a simplified mobile version focused on MENA region with essential layers enabled.</p>
-          <p>Tip: Use the view buttons (GLOBAL/US/MENA) to switch regions. Tap markers to see details.</p>
+          <p>${t("You're viewing a simplified mobile version focused on MENA region with essential layers enabled.")}</p>
+          <p>${t('Tip: Use the view buttons (GLOBAL/US/MENA) to switch regions. Tap markers to see details.')}</p>
         </div>
         <div class="mobile-warning-footer">
           <label class="mobile-warning-remember">
             <input type="checkbox" id="mobileWarningRemember">
-            <span>Don't show again</span>
+            <span>${t("Don't show again")}</span>
           </label>
-          <button class="mobile-warning-btn">Got it</button>
+          <button class="mobile-warning-btn">${t('Got it')}</button>
         </div>
       </div>
     `;

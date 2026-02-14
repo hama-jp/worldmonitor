@@ -3,6 +3,7 @@ import type { TechHubActivity } from '@/services/tech-activity';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { getLanguage } from '@/services/language';
 import { translateTexts } from '@/services/translation';
+import { t } from '@/config/translations';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   'USA': '🇺🇸', 'United States': '🇺🇸',
@@ -116,7 +117,7 @@ export class TechHubsPanel extends Panel {
               ${breakingTag}
             </div>
             <div class="hub-meta">
-              <span class="hub-news-count">${hub.newsCount} ${hub.newsCount === 1 ? 'story' : 'stories'}</span>
+              <span class="hub-news-count">${hub.newsCount} ${hub.newsCount === 1 ? t('story') : t('stories')}</span>
               ${trendIcon ? `<span class="hub-trend ${hub.trend}">${trendIcon}</span>` : ''}
               <span class="hub-tier">${hub.tier}</span>
             </div>

@@ -1,4 +1,5 @@
 import { Panel } from './Panel';
+import { t } from '@/config/translations';
 
 // YouTube IFrame Player API types
 type YouTubePlayer = {
@@ -303,8 +304,8 @@ export class LiveNewsPanel extends Panel {
     this.content.innerHTML = `
       <div class="live-offline">
         <div class="offline-icon">📺</div>
-        <div class="offline-text">${channel.name} is not currently live</div>
-        <button class="offline-retry" onclick="this.closest('.panel').querySelector('.live-channel-btn.active')?.click()">Retry</button>
+        <div class="offline-text">${channel.name} ${t('is not currently live')}</div>
+        <button class="offline-retry" onclick="this.closest('.panel').querySelector('.live-channel-btn.active')?.click()">${t('Retry')}</button>
       </div>
     `;
   }

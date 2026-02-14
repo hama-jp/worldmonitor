@@ -1,5 +1,6 @@
 import { Panel } from './Panel';
 import { escapeHtml } from '@/utils/sanitize';
+import { t } from '@/config/translations';
 
 interface ServiceStatus {
   id: string;
@@ -86,7 +87,7 @@ export class ServiceStatusPanel extends Panel {
       this.content.innerHTML = `
         <div class="service-status-loading">
           <div class="loading-spinner"></div>
-          <span>Checking services...</span>
+          <span>${t('Checking services...')}</span>
         </div>
       `;
       return;
@@ -96,7 +97,7 @@ export class ServiceStatusPanel extends Panel {
       this.content.innerHTML = `
         <div class="service-status-error">
           <span class="error-text">${escapeHtml(this.error)}</span>
-          <button class="retry-btn">Retry</button>
+          <button class="retry-btn">${t('Retry')}</button>
         </div>
       `;
       this.content.querySelector('.retry-btn')?.addEventListener('click', () => {
@@ -120,7 +121,7 @@ export class ServiceStatusPanel extends Panel {
       <div class="service-status-list">
         ${servicesHtml}
       </div>
-      ${issues.length === 0 ? '<div class="all-operational">All services operational</div>' : ''}
+      ${issues.length === 0 ? `<div class="all-operational">${t('All services operational')}</div>` : ''}
     `;
 
     this.attachFilterListeners();
@@ -135,15 +136,15 @@ export class ServiceStatusPanel extends Panel {
       <div class="service-status-summary">
         <div class="summary-item operational">
           <span class="summary-count">${operational}</span>
-          <span class="summary-label">OK</span>
+          <span class="summary-label">${t('OK')}</span>
         </div>
         <div class="summary-item degraded">
           <span class="summary-count">${degraded}</span>
-          <span class="summary-label">Degraded</span>
+          <span class="summary-label">${t('Degraded')}</span>
         </div>
         <div class="summary-item outage">
           <span class="summary-count">${outage}</span>
-          <span class="summary-label">Outage</span>
+          <span class="summary-label">${t('Outage')}</span>
         </div>
       </div>
     `;
@@ -152,7 +153,7 @@ export class ServiceStatusPanel extends Panel {
   private renderFilters(): string {
     const filters = Object.entries(CATEGORY_LABELS).map(([key, label]) => {
       const active = this.filter === key ? 'active' : '';
-      return `<button class="status-filter-btn ${active}" data-filter="${key}">${label}</button>`;
+      return `<button class="status-filter-btn ${active}" data-filter="${key}">${t(label)}</button>`;
     }).join('');
 
     return `<div class="service-status-filters">${filters}</div>`;
@@ -167,7 +168,7 @@ export class ServiceStatusPanel extends Panel {
         <div class="service-status-item ${statusClass}">
           <span class="status-icon">${statusIcon}</span>
           <span class="status-name">${escapeHtml(service.name)}</span>
-          <span class="status-badge ${statusClass}">${service.status.toUpperCase()}</span>
+          <span class="status-badge ${statusClass}">${t(service.status.toUpperCase())}</span>
         </div>
       `;
     }).join('');

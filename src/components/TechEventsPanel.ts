@@ -2,6 +2,7 @@ import { Panel } from './Panel';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { getLanguage } from '@/services/language';
 import { translateTexts } from '@/services/translation';
+import { t } from '@/config/translations';
 
 interface TechEventCoords {
   lat: number;
@@ -74,7 +75,7 @@ export class TechEventsPanel extends Panel {
       this.content.innerHTML = `
         <div class="tech-events-loading">
           <div class="loading-spinner"></div>
-          <span>Loading tech events...</span>
+          <span>${t('Loading tech events...')}</span>
         </div>
       `;
       return;
@@ -85,7 +86,7 @@ export class TechEventsPanel extends Panel {
         <div class="tech-events-error">
           <span class="error-icon">⚠️</span>
           <span class="error-text">${escapeHtml(this.error)}</span>
-          <button class="retry-btn" onclick="this.closest('.panel').querySelector('.panel-content').__panel?.refresh()">Retry</button>
+          <button class="retry-btn" onclick="this.closest('.panel').querySelector('.panel-content').__panel?.refresh()">${t('Retry')}</button>
         </div>
       `;
       return;
@@ -98,20 +99,20 @@ export class TechEventsPanel extends Panel {
     this.content.innerHTML = `
       <div class="tech-events-panel">
         <div class="tech-events-tabs">
-          <button class="tab ${this.viewMode === 'upcoming' ? 'active' : ''}" data-view="upcoming">Upcoming</button>
-          <button class="tab ${this.viewMode === 'conferences' ? 'active' : ''}" data-view="conferences">Conferences</button>
-          <button class="tab ${this.viewMode === 'earnings' ? 'active' : ''}" data-view="earnings">Earnings</button>
-          <button class="tab ${this.viewMode === 'all' ? 'active' : ''}" data-view="all">All</button>
+          <button class="tab ${this.viewMode === 'upcoming' ? 'active' : ''}" data-view="upcoming">${t('Upcoming')}</button>
+          <button class="tab ${this.viewMode === 'conferences' ? 'active' : ''}" data-view="conferences">${t('Conferences')}</button>
+          <button class="tab ${this.viewMode === 'earnings' ? 'active' : ''}" data-view="earnings">${t('Earnings')}</button>
+          <button class="tab ${this.viewMode === 'all' ? 'active' : ''}" data-view="all">${t('All')}</button>
         </div>
         <div class="tech-events-stats">
-          <span class="stat">📅 ${upcomingConferences.length} conferences</span>
-          <span class="stat">📍 ${mappableCount} on map</span>
+          <span class="stat">📅 ${upcomingConferences.length} ${t('conferences')}</span>
+          <span class="stat">📍 ${mappableCount} ${t('on map')}</span>
           <a href="https://www.techmeme.com/events" target="_blank" rel="noopener" class="source-link">Techmeme Events ↗</a>
         </div>
         <div class="tech-events-list">
           ${filteredEvents.length > 0
             ? filteredEvents.map(e => this.renderEvent(e)).join('')
-            : '<div class="empty-state">No events to display</div>'
+            : `<div class="empty-state">${t('No events to display')}</div>`
           }
         </div>
       </div>
@@ -184,9 +185,10 @@ export class TechEventsPanel extends Panel {
     const isSoon = !isToday && startDate <= new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000); // Within 2 days
     const isThisWeek = startDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const dateStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const locale = getLanguage() === 'ja' ? 'ja-JP' : 'en-US';
+    const dateStr = startDate.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
     const endDateStr = endDate > startDate && endDate.toDateString() !== startDate.toDateString()
-      ? ` - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      ? ` - ${endDate.toLocaleDateString(locale, { month: 'short', day: 'numeric' })}`
       : '';
 
     const typeIcons: Record<string, string> = {
@@ -219,10 +221,10 @@ export class TechEventsPanel extends Panel {
     return `
       <div class="tech-event ${typeClasses[event.type]} ${isToday ? 'is-today' : ''} ${isSoon ? 'is-soon' : ''} ${isThisWeek ? 'is-this-week' : ''}">
         <div class="event-date">
-          <span class="event-month">${startDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</span>
+          <span class="event-month">${startDate.toLocaleDateString(locale, { month: 'short' }).toUpperCase()}</span>
           <span class="event-day">${startDate.getDate()}</span>
-          ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
-          ${isSoon ? '<span class="soon-badge">SOON</span>' : ''}
+          ${isToday ? `<span class="today-badge">${t('TODAY')}</span>` : ''}
+          ${isSoon ? `<span class="soon-badge">${t('SOON')}</span>` : ''}
         </div>
         <div class="event-content">
           <div class="event-header">

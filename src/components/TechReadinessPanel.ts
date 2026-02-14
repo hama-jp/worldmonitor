@@ -1,6 +1,8 @@
 import { Panel } from './Panel';
 import { getTechReadinessRankings, type TechReadinessScore } from '@/services/worldbank';
 import { escapeHtml } from '@/utils/sanitize';
+import { t } from '@/config/translations';
+import { getLanguage } from '@/services/language';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   'USA': '🇺🇸', 'CHN': '🇨🇳', 'JPN': '🇯🇵', 'DEU': '🇩🇪', 'KOR': '🇰🇷',
@@ -71,30 +73,30 @@ export class TechReadinessPanel extends Panel {
           <div class="tech-globe-ring"></div>
           <span class="tech-globe">🌐</span>
         </div>
-        <div class="tech-fetch-title">Fetching World Bank Data</div>
+        <div class="tech-fetch-title">${t('Fetching World Bank Data')}</div>
         <div class="tech-fetch-indicators">
           <div class="tech-indicator-item" style="animation-delay: 0s">
             <span class="tech-indicator-icon">🌐</span>
-            <span class="tech-indicator-name">Internet Users</span>
+            <span class="tech-indicator-name">${t('Internet Users')}</span>
             <span class="tech-indicator-status"></span>
           </div>
           <div class="tech-indicator-item" style="animation-delay: 0.2s">
             <span class="tech-indicator-icon">📱</span>
-            <span class="tech-indicator-name">Mobile Subscriptions</span>
+            <span class="tech-indicator-name">${t('Mobile Subscriptions')}</span>
             <span class="tech-indicator-status"></span>
           </div>
           <div class="tech-indicator-item" style="animation-delay: 0.4s">
             <span class="tech-indicator-icon">📡</span>
-            <span class="tech-indicator-name">Broadband Access</span>
+            <span class="tech-indicator-name">${t('Broadband Access')}</span>
             <span class="tech-indicator-status"></span>
           </div>
           <div class="tech-indicator-item" style="animation-delay: 0.6s">
             <span class="tech-indicator-icon">🔬</span>
-            <span class="tech-indicator-name">R&D Expenditure</span>
+            <span class="tech-indicator-name">${t('R&D Expenditure')}</span>
             <span class="tech-indicator-status"></span>
           </div>
         </div>
-        <div class="tech-fetch-note">Analyzing 200+ countries...</div>
+        <div class="tech-fetch-note">${t('Analyzing 200+ countries...')}</div>
       </div>
     `);
   }
@@ -134,9 +136,9 @@ export class TechReadinessPanel extends Panel {
               <div class="readiness-info">
                 <div class="readiness-name">${escapeHtml(country.countryName)}</div>
                 <div class="readiness-components">
-                  <span title="Internet Users">🌐${this.formatComponent(country.components.internet)}</span>
-                  <span title="Mobile Subscriptions">📱${this.formatComponent(country.components.mobile)}</span>
-                  <span title="R&D Spending">🔬${this.formatComponent(country.components.rdSpend)}</span>
+                  <span title="${t('Internet Users')}">🌐${this.formatComponent(country.components.internet)}</span>
+                  <span title="${t('Mobile Subscriptions')}">📱${this.formatComponent(country.components.mobile)}</span>
+                  <span title="${t('R&D Expenditure')}">🔬${this.formatComponent(country.components.rdSpend)}</span>
                 </div>
               </div>
               <div class="readiness-score ${scoreClass}">${country.score}</div>
@@ -145,8 +147,8 @@ export class TechReadinessPanel extends Panel {
         }).join('')}
       </div>
       <div class="readiness-footer">
-        <span class="readiness-source">Source: World Bank</span>
-        <span class="readiness-updated">Updated: ${new Date(this.lastFetch).toLocaleDateString()}</span>
+        <span class="readiness-source">${t('Source: World Bank')}</span>
+        <span class="readiness-updated">${t('Updated:')} ${new Date(this.lastFetch).toLocaleDateString(getLanguage() === 'ja' ? 'ja-JP' : 'en-US')}</span>
       </div>
     `;
 
