@@ -1,21 +1,6 @@
 // Configuration exports
-// For variant-specific builds, set VITE_VARIANT environment variable
-// VITE_VARIANT=tech → startups.worldmonitor.app (tech-focused)
-// VITE_VARIANT=full → worldmonitor.app (geopolitical)
-// Runtime override: ?variant=tech or ?variant=full in URL
-
-function resolveVariant(): string {
-  // 1. URL query param override (for preview/dev deployments sharing one URL)
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    const qv = params.get('variant');
-    if (qv === 'tech' || qv === 'full') return qv;
-  }
-  // 2. Build-time env
-  return import.meta.env.VITE_VARIANT || 'full';
-}
-
-export const SITE_VARIANT = resolveVariant();
+// Variant resolved once at startup (URL ?variant= param or VITE_VARIANT env)
+export { SITE_VARIANT } from './variant';
 
 // Shared base configuration (always included)
 export {
