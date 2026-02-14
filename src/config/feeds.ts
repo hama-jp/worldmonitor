@@ -408,6 +408,14 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'South China Morning Post', url: railwayRss('https://www.scmp.com/rss/91/feed/') },
     { name: 'Reuters Asia', url: rss('https://news.google.com/rss/search?q=site:reuters.com+(China+OR+Japan+OR+Taiwan+OR+Korea)+when:3d&hl=en-US&gl=US&ceid=US:en') },
   ],
+  china: [
+    { name: 'China News', url: rss('https://news.google.com/rss/search?q=(China+domestic+OR+"Chinese+government"+OR+Xi+Jinping+OR+CCP)+when:2d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Taiwan Strait', url: rss('https://news.google.com/rss/search?q=("Taiwan+strait"+OR+"cross-strait"+OR+"Taiwan+China"+OR+"Chinese+military+Taiwan")+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Taiwan News', url: rss('https://news.google.com/rss/search?q=(Taiwan+politics+OR+DPP+OR+KMT+OR+"Taiwanese+government")+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'South China Morning Post', url: railwayRss('https://www.scmp.com/rss/4/feed') },
+    { name: 'BBC China', url: rss('https://news.google.com/rss/search?q=site:bbc.com+China+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'China Economy', url: rss('https://news.google.com/rss/search?q=("China+economy"+OR+"Chinese+economy"+OR+PBOC+OR+"China+trade")+when:3d&hl=en-US&gl=US&ceid=US:en') },
+  ],
   energy: [
     { name: 'Oil & Gas', url: rss('https://news.google.com/rss/search?q=(oil+price+OR+OPEC+OR+"natural+gas"+OR+pipeline+OR+LNG)+when:2d&hl=en-US&gl=US&ceid=US:en') },
     { name: 'Nuclear Energy', url: rss('https://news.google.com/rss/search?q=("nuclear+energy"+OR+"nuclear+power"+OR+uranium+OR+IAEA)+when:3d&hl=en-US&gl=US&ceid=US:en') },

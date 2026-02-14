@@ -1523,6 +1523,11 @@ export class App {
     this.newsPanels['asia'] = asiaPanel;
     this.panels['asia'] = asiaPanel;
 
+    const chinaPanel = new NewsPanel('china', 'China / Taiwan');
+    this.attachRelatedAssetHandlers(chinaPanel);
+    this.newsPanels['china'] = chinaPanel;
+    this.panels['china'] = chinaPanel;
+
     const energyPanel = new NewsPanel('energy', 'Energy & Resources');
     this.attachRelatedAssetHandlers(energyPanel);
     this.newsPanels['energy'] = energyPanel;
